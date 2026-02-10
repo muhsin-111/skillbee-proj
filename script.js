@@ -16,14 +16,19 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const SKILLBEE_MASTER_KEY = "SkillBee@2026";
 
-// Security
 document.addEventListener('contextmenu', event => event.preventDefault());
 
+// UPDATED: Added modestbranding and rel parameters to clean the view
 function formatYoutubeLink(url) {
     if (!url) return "";
-    if (url.includes("watch?v=")) return url.replace("watch?v=", "embed/").split('&')[0];
-    if (url.includes("youtu.be/")) return url.replace("youtu.be/", "youtube.com/embed/").split('?')[0];
-    return url;
+    let cleanUrl = url;
+    if (url.includes("watch?v=")) {
+        cleanUrl = url.replace("watch?v=", "embed/").split('&')[0];
+    } else if (url.includes("youtu.be/")) {
+        cleanUrl = url.replace("youtu.be/", "youtube.com/embed/").split('?')[0];
+    }
+    // Add parameters to hide logo and related videos
+    return cleanUrl + "?modestbranding=1&rel=0&showinfo=0&controls=1&autohide=1";
 }
 
 // ==========================================
@@ -49,9 +54,7 @@ async function addStudent() {
     const courseSelect = document.getElementById('sCourse');
     const courseName = courseSelect.options[courseSelect.selectedIndex].text;
     const courseId = courseSelect.value;
-
     if(!email || !pass) { alert("Fill all fields"); return; }
-
     try {
         const cred = await auth.createUserWithEmailAndPassword(email, pass);
         await db.collection("students").doc(cred.user.uid).set({
@@ -84,9 +87,7 @@ async function uploadClass() {
     const video = formatYoutubeLink(document.getElementById('vLink').value);
     const notes = document.getElementById('classNotes').value;
     const pdf = document.getElementById('pdfLink').value;
-
     if(!title || !video) { alert("Title and Link required"); return; }
-
     try {
         await db.collection("course_content").add({
             courseId, title, video, notes, pdf, timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -130,7 +131,6 @@ function loadDashboard(uid) {
         const student = doc.data();
         document.getElementById('userName').innerText = "Welcome, " + student.email;
         document.getElementById('assignedCourseName').innerText = student.courseName;
-        
         db.collection("course_content").where("courseId", "==", student.courseId).get().then(snap => {
             const list = document.getElementById('lessonList');
             list.innerHTML = "";
