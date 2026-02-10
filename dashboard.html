@@ -11,22 +11,22 @@
 <body>
     <div id="loginView" class="form-box">
         <h2 style="color:var(--primary)">Student Login</h2>
-        <input type="email" id="lEmail" placeholder="Enter Registered Email">
+        <input type="email" id="lEmail" placeholder="Enter Email">
         <input type="password" id="lPass" placeholder="Password">
         <button onclick="login()" class="btn btn-access" style="width:100%">Login</button>
     </div>
 
     <div id="dashView" class="container" style="display:none;">
         <nav class="navbar" style="margin-bottom: 20px;">
-            <h2 id="userName">Welcome</h2>
+            <div id="userName" class="logo" style="font-size: 1.2rem;">Welcome</div>
             <button onclick="logout()" class="btn btn-enroll">Logout</button>
         </nav>
         
-        <h3 id="assignedCourseName" style="color: var(--primary); margin-bottom: 20px;"></h3>
+        <h3 id="assignedCourseName" style="color: var(--primary); margin-bottom: 20px; text-align: center;"></h3>
 
         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <div id="lessonSidebar" style="flex: 1; min-width: 250px; background: white; border-radius: 15px; padding: 20px;">
-                <h4 style="margin-bottom:15px;">Your Lessons</h4>
+            <div id="lessonSidebar" style="flex: 1; min-width: 250px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h4 style="margin-bottom:15px; color: var(--secondary);">Lessons</h4>
                 <div id="lessonList"></div>
             </div>
 
@@ -34,9 +34,9 @@
                 <div class="video-wrapper">
                     <iframe id="mainVideo" width="100%" height="450" src="" frameborder="0" allowfullscreen></iframe>
                 </div>
-                <div class="course-card" style="margin-top: 20px;">
-                    <h3 id="currentLessonTitle">Select a lesson to start</h3>
-                    <p id="currentLessonNotes" style="margin-top:10px; color:#555;"></p>
+                <div class="course-card">
+                    <h3 id="currentLessonTitle">Select a lesson</h3>
+                    <p id="currentLessonNotes" style="white-space: pre-wrap; color: #555;"></p>
                     <div id="pdfArea" style="margin-top: 15px;"></div>
                 </div>
             </div>

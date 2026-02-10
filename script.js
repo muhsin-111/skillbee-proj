@@ -11,43 +11,31 @@ const firebaseConfig = {
   measurementId: "G-7LQ6MYTSVR"
 };
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 const auth = firebase.auth();
-
-// Master Admin Password
 const SKILLBEE_MASTER_KEY = "SkillBee@2026";
 
-// ==========================================
-// 2. SECURITY & UTILS
-// ==========================================
+// Security
 document.addEventListener('contextmenu', event => event.preventDefault());
 
 function formatYoutubeLink(url) {
     if (!url) return "";
-    if (url.includes("youtube.com/watch?v=")) {
-        return url.replace("watch?v=", "embed/");
-    } else if (url.includes("youtu.be/")) {
-        return url.replace("youtu.be/", "youtube.com/embed/");
-    }
+    if (url.includes("watch?v=")) return url.replace("watch?v=", "embed/").split('&')[0];
+    if (url.includes("youtu.be/")) return url.replace("youtu.be/", "youtube.com/embed/").split('?')[0];
     return url;
 }
 
 // ==========================================
-// 3. ADMIN: FUNCTIONS
+// 2. ADMIN FUNCTIONS
 // ==========================================
 function checkAdminPass() {
-    const input = document.getElementById('masterPass').value;
-    if (input === SKILLBEE_MASTER_KEY) {
+    if (document.getElementById('masterPass').value === SKILLBEE_MASTER_KEY) {
         document.getElementById('adminLock').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
         viewStudents();
-    } else {
-        alert("Incorrect Master Password.");
-    }
+        viewUploadedClasses();
+    } else { alert("Incorrect Password"); }
 }
 
 function showTab(tabId) {
@@ -56,100 +44,80 @@ function showTab(tabId) {
 }
 
 async function addStudent() {
-    // THIS LINE NOW WORKS BECAUSE WE FIXED ADMIN.HTML
-    const email = document.getElementById('sEmail').value; 
+    const email = document.getElementById('sEmail').value;
     const pass = document.getElementById('sPass').value;
     const courseSelect = document.getElementById('sCourse');
     const courseName = courseSelect.options[courseSelect.selectedIndex].text;
     const courseId = courseSelect.value;
 
-    if(!email || !pass) {
-        alert("Please fill in email and password.");
-        return;
-    }
+    if(!email || !pass) { alert("Fill all fields"); return; }
 
     try {
         const cred = await auth.createUserWithEmailAndPassword(email, pass);
         await db.collection("students").doc(cred.user.uid).set({
-            email: email,
-            courseName: courseName,
-            courseId: courseId,
-            uid: cred.user.uid
+            email, courseName, courseId, uid: cred.user.uid
         });
-        alert("Student Added Successfully!");
-        // Clear fields
-        document.getElementById('sEmail').value = "";
-        document.getElementById('sPass').value = "";
+        alert("Student Added!");
         viewStudents();
-    } catch (e) { alert("Error: " + e.message); }
+    } catch (e) { alert(e.message); }
 }
 
 function viewStudents() {
-    const tableBody = document.getElementById('studentListTable');
-    if(!tableBody) return;
-    tableBody.innerHTML = "Loading...";
-
-    db.collection("students").get().then((querySnapshot) => {
-        tableBody.innerHTML = "";
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const row = `
-                <tr style="border-bottom: 1px solid #ddd;">
-                    <td style="padding: 10px;">${data.email}</td>
-                    <td style="padding: 10px;">${data.courseName}</td>
-                    <td style="padding: 10px;">
-                        <button onclick="deleteStudent('${doc.id}')" style="color: red; border:none; background:none; cursor:pointer;">Delete</button>
-                    </td>
-                </tr>`;
-            tableBody.innerHTML += row;
+    const table = document.getElementById('studentListTable');
+    if(!table) return;
+    db.collection("students").get().then((snap) => {
+        table.innerHTML = "";
+        snap.forEach((doc) => {
+            const d = doc.data();
+            table.innerHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding:10px;">${d.email}</td><td style="padding:10px;">${d.courseName}</td><td><button onclick="deleteStudent('${doc.id}')" style="color:red; border:none; background:none; cursor:pointer;">Delete</button></td></tr>`;
         });
     });
 }
 
 function deleteStudent(id) {
-    if(confirm("Are you sure you want to remove this student?")) {
-        db.collection("students").doc(id).delete().then(() => {
-            alert("Student removed.");
-            viewStudents();
-        });
-    }
+    if(confirm("Remove Student?")) { db.collection("students").doc(id).delete().then(() => viewStudents()); }
 }
 
 async function uploadClass() {
-    const course = document.getElementById('uploadCourseSelect').value;
+    const courseId = document.getElementById('uploadCourseSelect').value;
     const title = document.getElementById('classTitle').value;
-    const link = formatYoutubeLink(document.getElementById('vLink').value);
+    const video = formatYoutubeLink(document.getElementById('vLink').value);
     const notes = document.getElementById('classNotes').value;
     const pdf = document.getElementById('pdfLink').value;
 
-    if(!title || !link) {
-        alert("Please provide at least a title and a video link.");
-        return;
-    }
+    if(!title || !video) { alert("Title and Link required"); return; }
 
     try {
         await db.collection("course_content").add({
-            courseId: course,
-            title: title,
-            video: link,
-            notes: notes,
-            pdf: pdf,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            courseId, title, video, notes, pdf, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Class Uploaded Successfully!");
-        document.getElementById('classTitle').value = "";
-        document.getElementById('vLink').value = "";
-        document.getElementById('classNotes').value = "";
+        alert("Class Uploaded!");
+        viewUploadedClasses();
     } catch (e) { alert(e.message); }
 }
 
+function viewUploadedClasses() {
+    const table = document.getElementById('classListTable');
+    if(!table) return;
+    db.collection("course_content").get().then((snap) => {
+        table.innerHTML = "";
+        snap.forEach((doc) => {
+            const d = doc.data();
+            table.innerHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding:10px;">${d.title}</td><td style="padding:10px;">${d.courseId}</td><td><button onclick="deleteClass('${doc.id}')" style="color:red; border:none; background:none; cursor:pointer;">Delete</button></td></tr>`;
+        });
+    });
+}
+
+function deleteClass(id) {
+    if(confirm("Delete this class?")) { db.collection("course_content").doc(id).delete().then(() => viewUploadedClasses()); }
+}
+
 // ==========================================
-// 4. STUDENT: FUNCTIONS
+// 3. STUDENT FUNCTIONS
 // ==========================================
 function login() {
     const email = document.getElementById('lEmail').value;
     const pass = document.getElementById('lPass').value;
-
     auth.signInWithEmailAndPassword(email, pass).then((cred) => {
         document.getElementById('loginView').style.display = 'none';
         document.getElementById('dashView').style.display = 'block';
@@ -159,45 +127,29 @@ function login() {
 
 function loadDashboard(uid) {
     db.collection("students").doc(uid).get().then(doc => {
-        if (doc.exists) {
-            const studentData = doc.data();
-            document.getElementById('userName').innerText = "Welcome, " + studentData.email;
-            document.getElementById('assignedCourseName').innerText = studentData.courseName;
-            
-            db.collection("course_content")
-              .where("courseId", "==", studentData.courseId)
-              .orderBy("timestamp", "asc")
-              .get().then(querySnapshot => {
-                const listDiv = document.getElementById('lessonList');
-                listDiv.innerHTML = "";
-                querySnapshot.forEach(classDoc => {
-                    const lesson = classDoc.data();
-                    const btn = document.createElement('button');
-                    btn.className = "btn btn-enroll";
-                    btn.style.width = "100%";
-                    btn.style.marginBottom = "8px";
-                    btn.innerText = lesson.title;
-                    btn.onclick = () => playLesson(lesson);
-                    listDiv.appendChild(btn);
-                });
+        const student = doc.data();
+        document.getElementById('userName').innerText = "Welcome, " + student.email;
+        document.getElementById('assignedCourseName').innerText = student.courseName;
+        
+        db.collection("course_content").where("courseId", "==", student.courseId).get().then(snap => {
+            const list = document.getElementById('lessonList');
+            list.innerHTML = "";
+            snap.forEach(classDoc => {
+                const lesson = classDoc.data();
+                const btn = document.createElement('button');
+                btn.className = "btn btn-enroll";
+                btn.style.width = "100%"; btn.style.marginBottom = "8px";
+                btn.innerText = lesson.title;
+                btn.onclick = () => {
+                    document.getElementById('mainVideo').src = lesson.video;
+                    document.getElementById('currentLessonTitle').innerText = lesson.title;
+                    document.getElementById('currentLessonNotes').innerText = lesson.notes;
+                    document.getElementById('pdfArea').innerHTML = lesson.pdf ? `<a href="${lesson.pdf}" target="_blank" class="btn btn-access">Download PDF</a>` : "";
+                };
+                list.appendChild(btn);
             });
-        }
+        });
     });
 }
 
-function playLesson(lesson) {
-    document.getElementById('mainVideo').src = lesson.video + "?rel=0&modestbranding=1";
-    document.getElementById('currentLessonTitle').innerText = lesson.title;
-    document.getElementById('currentLessonNotes').innerText = lesson.notes;
-    
-    const pdfArea = document.getElementById('pdfArea');
-    if(lesson.pdf) {
-        pdfArea.innerHTML = `<a href="${lesson.pdf}" target="_blank" class="btn btn-access">Download PDF Notes</a>`;
-    } else {
-        pdfArea.innerHTML = "";
-    }
-}
-
-function logout() {
-    auth.signOut().then(() => location.reload());
-}
+function logout() { auth.signOut().then(() => location.reload()); }
