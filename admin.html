@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SkillBee | Admin Master Control</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div id="adminLock" class="form-box">
+        <h2 style="color: var(--primary);">Admin Security</h2>
+        <input type="password" id="masterPass" placeholder="Enter Master Password">
+        <button onclick="checkAdminPass()" class="btn btn-access" style="width: 100%;">Unlock</button>
+    </div>
+
+    <div id="adminContent" style="display: none;">
+        <nav class="navbar">
+            <div class="logo">SkillBee Manager</div>
+            <div>
+                <button onclick="showTab('studentsTab')" class="btn btn-access">Manage Students</button>
+                <button onclick="showTab('classesTab')" class="btn btn-enroll">Upload Classes</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div id="studentsTab" class="tab-content">
+                <div class="form-box">
+                    <h3>Register New Student</h3>
+                    <input type="email" id="sEmail" placeholder="Student Email Address">
+                    <input type="password" id="sPass" placeholder="Set Password (Min 6 chars)">
+                    <select id="sCourse">
+                        <option value="graphic_online">3 Month AI Graphic Design</option>
+                        <option value="resin_online">10 Days Resin Art</option>
+                        <option value="art_craft">15 Days Art and Craft</option>
+                        <option value="offline_resin">2 Days Offline Resin Art</option>
+                    </select>
+                    <button onclick="addStudent()" class="btn btn-access" style="width:100%;">Create Account</button>
+                    
+                    <div style="margin-top: 30px;">
+                        <h4>Student List</h4>
+                        <button onclick="viewStudents()" class="btn btn-enroll" style="margin-bottom:10px;">Refresh List</button>
+                        <table style="width:100%; text-align:left;">
+                            <thead><tr><th>Email</th><th>Course</th><th>Action</th></tr></thead>
+                            <tbody id="studentListTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="classesTab" class="tab-content" style="display:none;">
+                <div class="form-box" style="max-width: 700px;">
+                    <h3>Upload Class Content</h3>
+                    <select id="uploadCourseSelect">
+                        <option value="graphic_online">3 Month AI Graphic Design</option>
+                        <option value="resin_online">10 Days Resin Art</option>
+                        <option value="art_craft">15 Days Art and Craft</option>
+                        <option value="offline_resin">2 Days Offline Resin Art</option>
+                    </select>
+                    <input type="text" id="classTitle" placeholder="Class Title (e.g. Lesson 1: Introduction)">
+                    <input type="text" id="vLink" placeholder="YouTube Video Link">
+                    <textarea id="classNotes" placeholder="Write class notes here..."></textarea>
+                    <input type="text" id="pdfLink" placeholder="PDF Resource Link (Google Drive/Dropbox)">
+                    <button onclick="uploadClass()" class="btn btn-enroll" style="width:100%;">Add Class to Course</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
